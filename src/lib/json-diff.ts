@@ -71,6 +71,37 @@ function strictEqual(a: unknown, b: unknown): boolean {
 // ── Array diff helpers ────────────────────────────────────────────────────────
 
 /**
+ * Recursively normalize a value for hashing so that elements equal under
+ * the given options produce identical JSON.stringify output.
+ * - When ignoreArrayOrder: sort array items after normalizing them.
+ * - When ignoreObjectKeyOrder: sort object entries by key.
+ */
+function normalizeForCompare(value: unknown, opts: DiffOptions): unknown {
+  if (Array.isArray(value)) {
+    const items = value.map(item => normalizeForCompare(item, opts))
+    if (opts.ignoreArrayOrder) {
+      return items.slice().sort((a, b) => {
+        const sa = JSON.stringify(a) ?? ''
+        const sb = JSON.stringify(b) ?? ''
+        return sa < sb ? -1 : sa > sb ? 1 : 0
+      })
+    }
+    return items
+  }
+  if (value !== null && typeof value === 'object') {
+    const obj = value as Record<string, unknown>
+    const entries = Object.entries(obj).map(
+      ([k, v]) => [k, normalizeForCompare(v, opts)] as [string, unknown]
+    )
+    if (opts.ignoreObjectKeyOrder) {
+      entries.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    }
+    return Object.fromEntries(entries)
+  }
+  return value
+}
+
+/**
  * Ordered array diff: match elements by index, recurse on each pair.
  * For extra elements in the longer array, emit added/removed.
  */
@@ -111,7 +142,7 @@ function diffArrayUnordered(
   // Build hash → available indices map for B
   const bAvailable = new Map<string, number[]>()
   b.forEach((item, i) => {
-    const h = JSON.stringify(item) ?? 'undefined'
+    const h = JSON.stringify(normalizeForCompare(item, opts)) ?? 'undefined'
     const arr = bAvailable.get(h) ?? []
     arr.push(i)
     bAvailable.set(h, arr)
@@ -123,7 +154,7 @@ function diffArrayUnordered(
 
   // Match each A element to a B element
   for (let i = 0; i < a.length; i++) {
-    const h = JSON.stringify(a[i]) ?? 'undefined'
+    const h = JSON.stringify(normalizeForCompare(a[i], opts)) ?? 'undefined'
     const available = bAvailable.get(h)
     if (available && available.length > 0) {
       const bIdx = available.shift()!
@@ -136,31 +167,6 @@ function diffArrayUnordered(
 
   const addedB = b.map((_, i) => i).filter((i) => !matchedBIndices.has(i))
   const children: DiffNode[] = []
-
-  // Detect reordering: if all elements match but indices differ
-  const allMatched = removedA.length === 0 && addedB.length === 0
-  const isReordered =
-    allMatched && unchangedA.some(({ aIdx, bIdx }) => aIdx !== bIdx)
-
-  if (isReordered && !opts.ignoreArrayOrder) {
-    // Show as reordered (elements exist in both, just different positions)
-    for (const { aIdx, bIdx } of unchangedA) {
-      const childPath = `${path}[${aIdx}]`
-      if (aIdx !== bIdx) {
-        children.push({
-          key: aIdx,
-          path: childPath,
-          kind: 'reordered',
-          oldValue: a[aIdx],
-          newValue: b[bIdx],
-          stats: leafStats('reordered'),
-        })
-      } else {
-        children.push(unchangedNode(aIdx, a[aIdx], childPath))
-      }
-    }
-    return children
-  }
 
   // Emit unchanged matches
   for (const { aIdx } of unchangedA) {
