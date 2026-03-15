@@ -1,13 +1,17 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useCallback, Suspense, lazy } from 'react'
+import type { editor } from 'monaco-editor'
 import { parseJson } from '@/lib/json-parser'
 import { diffJson, summarize, type DiffOptions, type DiffNode } from '@/lib/json-diff'
 import { DiffTreeNode } from './DiffTree'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import type { ParseResult } from '@/types/json'
+import type { ParseResult, ValidationError } from '@/types/json'
+
+const MonacoEditor = lazy(() => import('@monaco-editor/react').then((m) => ({ default: m.Editor })))
 
 interface Props {
   docA: ParseResult // the main editor JSON (left panel)
+  isDark: boolean
 }
 
 function OptionToggle({
@@ -51,8 +55,45 @@ function OptionToggle({
   )
 }
 
-export function DiffPanel({ docA }: Props) {
+export function DiffPanel({ docA, isDark }: Props) {
   const [rawB, setRawB] = useState('')
+  const editorBRef = useRef<editor.IStandaloneCodeEditor | null>(null)
+  const monacoBRef = useRef<typeof import('monaco-editor') | null>(null)
+  const decorationsBRef = useRef<string[]>([])
+
+  const applyBDecorations = useCallback(
+    (ed: editor.IStandaloneCodeEditor, monaco: typeof import('monaco-editor'), errs: ValidationError[]) => {
+      decorationsBRef.current = ed.deltaDecorations(
+        decorationsBRef.current,
+        errs.map((err) => ({
+          range: new monaco.Range(err.line, err.column, err.line, err.column + 1),
+          options: {
+            className: 'json-error-underline',
+            hoverMessage: { value: `⚠️ ${err.plainEnglish}` },
+            overviewRuler: { color: 'rgba(255,80,80,0.8)', position: monaco.editor.OverviewRulerLane.Right },
+            inlineClassName: 'json-error-underline',
+          },
+        }))
+      )
+    },
+    []
+  )
+
+  const handleBMount = useCallback(
+    (ed: editor.IStandaloneCodeEditor, monaco: typeof import('monaco-editor')) => {
+      editorBRef.current = ed
+      monacoBRef.current = monaco
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const jsonLang = monaco.languages.json as any
+        if (jsonLang?.jsonDefaults?.setDiagnosticsOptions) {
+          jsonLang.jsonDefaults.setDiagnosticsOptions({ validate: false })
+        }
+      } catch { /* ignore */ }
+    },
+    []
+  )
+
   const [hideUnchanged, setHideUnchanged] = useState(true)
   const [opts, setOpts] = useState<DiffOptions>({
     ignoreArrayOrder: false,
@@ -60,6 +101,11 @@ export function DiffPanel({ docA }: Props) {
   })
 
   const docB = useMemo(() => parseJson(rawB, 2), [rawB])
+
+  // Sync error decorations into the Monaco editor whenever docB changes
+  if (editorBRef.current && monacoBRef.current) {
+    applyBDecorations(editorBRef.current, monacoBRef.current, docB.errors)
+  }
 
   const lastValidDiff = useRef<DiffNode | null>(null)
   const diffResult = useMemo(() => {
@@ -123,13 +169,40 @@ export function DiffPanel({ docA }: Props) {
             </Badge>
           )}
         </div>
-        <textarea
-          className="min-h-0 flex-1 resize-none bg-background p-3 font-mono text-xs text-foreground placeholder:text-muted-foreground/40 focus:outline-none"
-          value={rawB}
-          onChange={(e) => setRawB(e.target.value)}
-          placeholder={'Paste the second JSON document here…\n\n{\n  "example": true\n}'}
-          spellCheck={false}
-        />
+        <div className="min-h-0 flex-1">
+          <Suspense
+            fallback={
+              <textarea
+                className="h-full w-full resize-none bg-background p-3 font-mono text-xs text-foreground placeholder:text-muted-foreground/40 focus:outline-none"
+                value={rawB}
+                onChange={(e) => setRawB(e.target.value)}
+                placeholder={'Paste the second JSON document here…'}
+                spellCheck={false}
+              />
+            }
+          >
+            <MonacoEditor
+              height="100%"
+              language="json"
+              theme={isDark ? 'vs-dark' : 'vs'}
+              value={rawB}
+              onChange={(val) => setRawB(val ?? '')}
+              onMount={handleBMount}
+              options={{
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                wordWrap: 'on',
+                fontSize: 12,
+                lineNumbers: 'on',
+                glyphMargin: false,
+                folding: true,
+                automaticLayout: true,
+                tabSize: 2,
+                fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
+              }}
+            />
+          </Suspense>
+        </div>
         {rawB && !docB.valid && docB.errors[0] && (
           <div className="shrink-0 border-t bg-red-50 px-3 py-1 font-mono text-xs text-red-700 dark:bg-red-950/40 dark:text-red-400">
             Line {docB.errors[0].line}, Col {docB.errors[0].column}: {docB.errors[0].plainEnglish}
