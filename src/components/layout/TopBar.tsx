@@ -1,12 +1,12 @@
-import { Braces, Moon, Sun } from 'lucide-react'
+import { Braces, Moon, Sun, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ShareButton } from '@/components/toolbar/ShareButton'
+import { cn } from '@/lib/utils'
 import type { ToolMode, IndentWidth } from '@/types/state'
 
 const TABS: { id: ToolMode; label: string }[] = [
   { id: 'prettify', label: 'Prettify' },
   { id: 'minify', label: 'Minify' },
-  { id: 'validate', label: 'Validate' },
   { id: 'tree', label: 'Tree' },
   { id: 'jsonpath', label: 'JSONPath' },
 ]
@@ -20,6 +20,7 @@ interface Props {
   selectedNodePath: string | null
   isDark: boolean
   onToggleDark: () => void
+  hasErrors: boolean
 }
 
 export function TopBar({
@@ -31,6 +32,7 @@ export function TopBar({
   selectedNodePath,
   isDark,
   onToggleDark,
+  hasErrors,
 }: Props) {
   return (
     <header className="flex h-14 shrink-0 items-center justify-between border-b bg-background px-4">
@@ -42,15 +44,26 @@ export function TopBar({
 
       {/* Tab navigation */}
       <nav className="flex items-center rounded-lg border bg-muted p-1">
+        {/* Error indicator — shown instead of normal tabs when JSON is invalid */}
+        {hasErrors && (
+          <div className="flex items-center gap-1.5 rounded-md bg-red-100 px-3 py-1.5 text-sm font-medium text-red-700 dark:bg-red-950/60 dark:text-red-400">
+            <AlertCircle className="h-3.5 w-3.5" />
+            Errors
+          </div>
+        )}
         {TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
-              activeTab === tab.id
-                ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+            disabled={hasErrors}
+            className={cn(
+              'rounded-md px-3 py-1.5 text-sm font-medium transition-all',
+              hasErrors
+                ? 'text-muted-foreground/40 cursor-not-allowed'
+                : activeTab === tab.id
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+            )}
           >
             {tab.label}
           </button>

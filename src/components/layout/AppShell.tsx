@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { TopBar } from './TopBar'
 import { PanelSplit } from './PanelSplit'
 import { EmptyState } from './EmptyState'
@@ -45,85 +45,69 @@ export function AppShell() {
     localStorage.setItem('json-toolbox-dark', String(isDark))
   }, [isDark])
 
-  // Keyboard shortcuts
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey) {
-        if (e.key === 'F' || e.key === 'f') {
-          e.preventDefault()
-          setActiveTab('prettify')
-        } else if (e.key === 'M' || e.key === 'm') {
-          e.preventDefault()
-          setActiveTab('minify')
-        }
-      }
-    },
-    [setActiveTab]
-  )
-
-  useEffect(() => {
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [handleKeyDown])
-
   const hasInput = rawJson.trim().length > 0
 
-  // If no input yet, show empty state with textarea; once there's input switch to Monaco
-  const leftPanelFinal = hasInput ? (
+  // ── Left panel ─────────────────────────────────────────────────────────────
+  // Always show the editor area as the primary focus. EmptyState is a thin strip
+  // below the editor (only shown when empty) — it never overlays the input area.
+  const leftPanel = (
     <div className="flex h-full flex-col">
       <div className="min-h-0 flex-1">
-        <JsonEditor
-          value={rawJson}
-          onChange={setRawJson}
-          errors={parseResult.errors}
-          isDark={isDark}
-        />
+        {hasInput ? (
+          <JsonEditor
+            value={rawJson}
+            onChange={setRawJson}
+            errors={parseResult.errors}
+            isDark={isDark}
+          />
+        ) : (
+          <textarea
+            autoFocus
+            className="h-full w-full resize-none bg-background p-4 font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
+            value={rawJson}
+            onChange={(e) => setRawJson(e.target.value)}
+            placeholder={'Paste or type your JSON here…\n\n{\n  "example": true\n}'}
+            spellCheck={false}
+          />
+        )}
       </div>
+
+      {/* Thin example strip — only while input is empty */}
+      {!hasInput && <EmptyState onSelect={setRawJson} />}
+
+      {/* Status banners — always at the bottom */}
       <ValidationBanner parseResult={parseResult} hasInput={hasInput} />
       <EditorStatusBar rawJson={rawJson} parseResult={parseResult} />
     </div>
-  ) : (
-    <div className="flex h-full flex-col">
-      <div className="min-h-0 flex-1">
-        <textarea
-          className="h-full w-full resize-none bg-background p-4 font-mono text-sm text-foreground focus:outline-none"
-          value={rawJson}
-          onChange={(e) => setRawJson(e.target.value)}
-          placeholder="Paste or type your JSON here…"
-          spellCheck={false}
-        />
-      </div>
-      <EmptyState onSelect={setRawJson} />
-      <EditorStatusBar rawJson={rawJson} parseResult={parseResult} />
-    </div>
   )
+
+  // ── Right panel ────────────────────────────────────────────────────────────
+  // When JSON is invalid, always show the error details regardless of active tab.
+  // When valid (or no input), show the selected tool.
+  const showErrors = hasInput && !parseResult.valid
 
   const rightPanel = (
     <div className="flex h-full flex-col">
-      {activeTab === 'prettify' && (
+      {showErrors ? (
+        <ValidatePanel parseResult={parseResult} hasInput={hasInput} />
+      ) : activeTab === 'prettify' ? (
         <PrettifyPanel
           parseResult={parseResult}
           indentWidth={indentWidth}
           onIndentChange={setIndentWidth}
           isDark={isDark}
         />
-      )}
-      {activeTab === 'minify' && <MinifyPanel parseResult={parseResult} />}
-      {activeTab === 'validate' && (
-        <ValidatePanel parseResult={parseResult} hasInput={hasInput} />
-      )}
-      {activeTab === 'tree' && (
+      ) : activeTab === 'minify' ? (
+        <MinifyPanel parseResult={parseResult} />
+      ) : activeTab === 'tree' ? (
         <TreePanel
           parseResult={parseResult}
           collapsedPaths={collapsedPaths}
           onToggle={toggleCollapsed}
-          highlightedPaths={
-            activeTab === 'tree' ? highlightedPaths : new Set<string>()
-          }
+          highlightedPaths={highlightedPaths}
           onSelectPath={setSelectedNodePath}
         />
-      )}
-      {activeTab === 'jsonpath' && (
+      ) : activeTab === 'jsonpath' ? (
         <JsonPathPanel
           query={jsonPathQuery}
           onQueryChange={setJsonPathQuery}
@@ -133,7 +117,7 @@ export function AppShell() {
           selectedPath={selectedNodePath}
           onSelectPath={setSelectedNodePath}
         />
-      )}
+      ) : null}
     </div>
   )
 
@@ -148,8 +132,9 @@ export function AppShell() {
         selectedNodePath={selectedNodePath}
         isDark={isDark}
         onToggleDark={() => setIsDark((d) => !d)}
+        hasErrors={showErrors}
       />
-      <PanelSplit left={leftPanelFinal} right={rightPanel} className="flex-1" />
+      <PanelSplit left={leftPanel} right={rightPanel} className="flex-1" />
       <Toaster />
     </div>
   )
