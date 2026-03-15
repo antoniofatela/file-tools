@@ -10,6 +10,7 @@ const TABS: { id: ToolMode; label: string }[] = [
   { id: 'tree', label: 'Tree' },
   { id: 'jsonpath', label: 'JSONPath' },
   { id: 'schema', label: 'Schema' },
+  { id: 'diff', label: 'Diff' },
 ]
 
 interface Props {

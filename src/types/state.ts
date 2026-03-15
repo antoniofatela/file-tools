@@ -1,6 +1,6 @@
 import type { ParseResult, PathResult } from './json'
 
-export type ToolMode = 'prettify' | 'minify' | 'validate' | 'tree' | 'jsonpath' | 'schema'
+export type ToolMode = 'prettify' | 'minify' | 'validate' | 'tree' | 'jsonpath' | 'schema' | 'diff'
 export type IndentWidth = 2 | 4 | 'tab'
 
 export interface AppState {
