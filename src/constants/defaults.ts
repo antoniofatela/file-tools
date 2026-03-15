@@ -1,6 +1,6 @@
 import type { IndentWidth, ToolMode } from '@/types/state'
 
-export const DEFAULT_INDENT: IndentWidth = 2
+export const DEFAULT_INDENT: IndentWidth = 'tab'
 export const DEFAULT_TAB: ToolMode = 'prettify'
 export const PARSE_DEBOUNCE_MS = 150
 export const URL_DEBOUNCE_MS = 500
