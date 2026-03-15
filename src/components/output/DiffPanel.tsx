@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { parseJson } from '@/lib/json-parser'
-import { diffJson, summarize, type DiffOptions } from '@/lib/json-diff'
+import { diffJson, summarize, type DiffOptions, type DiffNode } from '@/lib/json-diff'
 import { DiffTreeNode } from './DiffTree'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
@@ -61,12 +61,22 @@ export function DiffPanel({ docA }: Props) {
 
   const docB = useMemo(() => parseJson(rawB, 2), [rawB])
 
+  const lastValidDiff = useRef<DiffNode | null>(null)
   const diffResult = useMemo(() => {
     if (!docA.valid || !docB.valid) return null
-    return diffJson(docA.parsed, docB.parsed, opts)
+    const result = diffJson(docA.parsed, docB.parsed, opts)
+    lastValidDiff.current = result
+    return result
   }, [docA.valid, docA.parsed, docB.valid, docB.parsed, opts])
 
-  const summary = useMemo(() => (diffResult ? summarize(diffResult) : null), [diffResult])
+  const hasError = !docA.valid || (rawB.length > 0 && !docB.valid)
+  const displayedDiff = diffResult ?? lastValidDiff.current
+  const isStale = hasError && displayedDiff !== null
+
+  const summary = useMemo(
+    () => (displayedDiff ? summarize(displayedDiff) : null),
+    [displayedDiff]
+  )
 
   const isIdentical = summary?.total === 0
 
@@ -130,8 +140,8 @@ export function DiffPanel({ docA }: Props) {
       {/* Diff output */}
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         {/* Summary bar */}
-        {diffResult && summary !== null && (
-          <div className="flex shrink-0 flex-wrap items-center gap-2 border-b px-3 py-2">
+        {displayedDiff && summary !== null && (
+          <div className={cn('flex shrink-0 flex-wrap items-center gap-2 border-b px-3 py-2', isStale && 'opacity-50')}>
             {isIdentical ? (
               <Badge variant="success">Identical</Badge>
             ) : (
@@ -157,23 +167,32 @@ export function DiffPanel({ docA }: Props) {
 
         {/* Diff tree / empty states */}
         <div className="min-h-0 flex-1 overflow-auto p-2">
-          {!docA.valid && (
+          {/* Empty states — only shown when there's no previous valid diff to display */}
+          {!displayedDiff && !docA.valid && (
             <p className="p-4 text-sm text-muted-foreground">
               Fix the errors in Document A (left panel) first.
             </p>
           )}
-          {docA.valid && !rawB && (
+          {!displayedDiff && docA.valid && !rawB && (
             <p className="p-4 text-sm text-muted-foreground">
               Paste a second JSON document above to see the diff.
             </p>
           )}
-          {docA.valid && rawB && !docB.valid && (
+          {!displayedDiff && docA.valid && rawB && !docB.valid && (
             <p className="p-4 text-sm text-muted-foreground">
               Fix the errors in Document B to see the diff.
             </p>
           )}
-          {diffResult && (
-            <DiffTreeNode node={diffResult} depth={0} hideUnchanged={hideUnchanged} />
+          {/* Stale-diff notice */}
+          {isStale && (
+            <p className="mb-2 px-2 text-xs italic text-muted-foreground">
+              Showing last valid diff
+            </p>
+          )}
+          {displayedDiff && (
+            <div className={cn(isStale && 'pointer-events-none opacity-50')}>
+              <DiffTreeNode node={displayedDiff} depth={0} hideUnchanged={hideUnchanged} />
+            </div>
           )}
         </div>
       </div>
