@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback } from 'react'
+import { GripVertical } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface Props {
@@ -12,33 +13,30 @@ export function PanelSplit({ left, right, className }: Props) {
   const [isDragging, setIsDragging] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const onMouseDown = useCallback((e: React.MouseEvent) => {
+  // setPointerCapture routes all pointer events to this element even when the
+  // pointer moves over iframes (Monaco), which is what broke document-level listeners.
+  const onPointerDown = useCallback((e: React.PointerEvent<HTMLDivElement>) => {
     e.preventDefault()
+    e.currentTarget.setPointerCapture(e.pointerId)
     setIsDragging(true)
+  }, [])
 
-    const onMouseMove = (ev: MouseEvent) => {
-      if (!containerRef.current) return
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!isDragging || !containerRef.current) return
       const rect = containerRef.current.getBoundingClientRect()
-      const ratio = Math.min(Math.max((ev.clientX - rect.left) / rect.width, 0.2), 0.8)
+      const ratio = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0.15), 0.85)
       setSplitRatio(ratio)
-    }
+    },
+    [isDragging]
+  )
 
-    const onMouseUp = () => {
-      setIsDragging(false)
-      document.removeEventListener('mousemove', onMouseMove)
-      document.removeEventListener('mouseup', onMouseUp)
-    }
-
-    document.addEventListener('mousemove', onMouseMove)
-    document.addEventListener('mouseup', onMouseUp)
+  const onPointerUp = useCallback(() => {
+    setIsDragging(false)
   }, [])
 
   return (
-    <div
-      ref={containerRef}
-      className={cn('flex min-h-0 flex-1 overflow-hidden', className)}
-      style={{ cursor: isDragging ? 'col-resize' : undefined }}
-    >
+    <div ref={containerRef} className={cn('flex min-h-0 flex-1 overflow-hidden', className)}>
       {/* Left panel */}
       <div
         className="min-w-0 overflow-hidden"
@@ -47,35 +45,34 @@ export function PanelSplit({ left, right, className }: Props) {
         {left}
       </div>
 
-      {/* Drag handle */}
+      {/* Drag handle — wide enough to grab, clear visual affordance */}
       <div
+        role="separator"
+        aria-label="Drag to resize panels"
+        title="Drag to resize"
         className={cn(
-          'group relative z-10 flex w-2 shrink-0 cursor-col-resize items-center justify-center transition-colors',
-          isDragging ? 'bg-primary/50' : 'bg-border hover:bg-primary/30'
+          'group relative z-10 flex w-3 shrink-0 cursor-col-resize select-none flex-col items-center justify-center gap-0.5 transition-colors',
+          isDragging
+            ? 'bg-primary/20'
+            : 'bg-border hover:bg-primary/10'
         )}
-        onMouseDown={onMouseDown}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
       >
-        {/* Visual grip dots */}
-        <div className="flex flex-col gap-1">
-          {[0, 1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className={cn(
-                'h-1 w-1 rounded-full transition-colors',
-                isDragging ? 'bg-primary' : 'bg-muted-foreground/40 group-hover:bg-primary/60'
-              )}
-            />
-          ))}
-        </div>
+        <GripVertical
+          className={cn(
+            'h-5 w-5 transition-colors',
+            isDragging
+              ? 'text-primary'
+              : 'text-muted-foreground/50 group-hover:text-primary/70'
+          )}
+        />
       </div>
 
       {/* Right panel */}
       <div className="min-w-0 flex-1 overflow-hidden">{right}</div>
-
-      {/* Full-screen capture overlay during drag — prevents Monaco iframe from eating events */}
-      {isDragging && (
-        <div className="fixed inset-0 z-50 cursor-col-resize" />
-      )}
     </div>
   )
 }

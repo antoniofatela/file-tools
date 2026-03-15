@@ -10,6 +10,7 @@ import { MinifyPanel } from '@/components/output/MinifyPanel'
 import { ValidatePanel } from '@/components/output/ValidatePanel'
 import { TreePanel } from '@/components/tree/TreePanel'
 import { JsonPathPanel } from '@/components/jsonpath/JsonPathPanel'
+import { SchemaPanel } from '@/components/output/SchemaPanel'
 import { useAppState } from '@/hooks/useAppState'
 import { Toaster } from '@/components/ui/toaster'
 
@@ -117,6 +118,8 @@ export function AppShell() {
           selectedPath={selectedNodePath}
           onSelectPath={setSelectedNodePath}
         />
+      ) : activeTab === 'schema' ? (
+        <SchemaPanel parseResult={parseResult} isDark={isDark} />
       ) : null}
     </div>
   )
