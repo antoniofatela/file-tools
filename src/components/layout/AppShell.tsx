@@ -122,7 +122,7 @@ export function AppShell() {
       ) : activeTab === 'schema' ? (
         <SchemaPanel parseResult={parseResult} isDark={isDark} />
       ) : activeTab === 'diff' ? (
-        <DiffPanel docA={parseResult} />
+        <DiffPanel docA={parseResult} isDark={isDark} />
       ) : null}
     </div>
   )

@@ -208,13 +208,19 @@ function diffObject(
     }
   }
 
-  // Detect key-order change when ignoreObjectKeyOrder is false
-  if (!opts.ignoreObjectKeyOrder && children.every((c) => c.kind === 'unchanged')) {
-    const aOrder = aKeys.join(',')
-    const bOrder = bKeys.join(',')
-    if (aOrder !== bOrder) {
-      // Mark the container itself as reordered but leave children unchanged
-      return children.map((c) => ({ ...c, kind: 'reordered' as ChangeKind, stats: leafStats('reordered') }))
+  // Detect key-order change when ignoreObjectKeyOrder is false.
+  // Compare the relative order of keys that exist in both objects —
+  // this must run even when some keys are added or removed.
+  if (!opts.ignoreObjectKeyOrder) {
+    const aCommon = aKeys.filter((k) => k in b)
+    const bCommon = bKeys.filter((k) => k in a)
+    if (aCommon.join(',') !== bCommon.join(',')) {
+      // Mark unchanged common-key children as reordered; leave added/removed as-is
+      return children.map((c) =>
+        c.kind === 'unchanged' && typeof c.key === 'string'
+          ? { ...c, kind: 'reordered' as ChangeKind, stats: leafStats('reordered') }
+          : c
+      )
     }
   }
 
