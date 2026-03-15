@@ -86,7 +86,7 @@ export function AppShell() {
   // ── Right panel ────────────────────────────────────────────────────────────
   // When JSON is invalid, always show the error details regardless of active tab.
   // When valid (or no input), show the selected tool.
-  const showErrors = hasInput && !parseResult.valid
+  const showErrors = hasInput && !parseResult.valid && activeTab !== 'diff'
 
   const rightPanel = (
     <div className="flex h-full flex-col">
