@@ -130,8 +130,11 @@ function diffArrayOrdered(
 
 /**
  * Unordered array diff: match elements by value identity (JSON.stringify hash).
- * Exact matches → unchanged. Leftovers → added/removed.
- * Near-matches within objects are NOT attempted: unmatched objects show as remove+add.
+ * Matching always ignores object key order so that two objects with the same
+ * content but different key order are treated as the same element.
+ * Once matched, pairs are recursively diffed with the original opts so that
+ * any key-order differences inside are still reported.
+ * Unmatched elements → added/removed.
  */
 function diffArrayUnordered(
   a: unknown[],
@@ -139,27 +142,32 @@ function diffArrayUnordered(
   path: string,
   opts: DiffOptions
 ): DiffNode[] {
+  // Always ignore object key order when deciding which B element corresponds
+  // to each A element. This prevents a false remove+add when the only
+  // difference inside is key ordering.
+  const matchOpts: DiffOptions = { ...opts, ignoreObjectKeyOrder: true }
+
   // Build hash → available indices map for B
   const bAvailable = new Map<string, number[]>()
   b.forEach((item, i) => {
-    const h = JSON.stringify(normalizeForCompare(item, opts)) ?? 'undefined'
+    const h = JSON.stringify(normalizeForCompare(item, matchOpts)) ?? 'undefined'
     const arr = bAvailable.get(h) ?? []
     arr.push(i)
     bAvailable.set(h, arr)
   })
 
   const matchedBIndices = new Set<number>()
-  const unchangedA: Array<{ aIdx: number; bIdx: number }> = []
+  const matchedPairs: Array<{ aIdx: number; bIdx: number }> = []
   const removedA: number[] = []
 
   // Match each A element to a B element
   for (let i = 0; i < a.length; i++) {
-    const h = JSON.stringify(normalizeForCompare(a[i], opts)) ?? 'undefined'
+    const h = JSON.stringify(normalizeForCompare(a[i], matchOpts)) ?? 'undefined'
     const available = bAvailable.get(h)
     if (available && available.length > 0) {
       const bIdx = available.shift()!
       matchedBIndices.add(bIdx)
-      unchangedA.push({ aIdx: i, bIdx })
+      matchedPairs.push({ aIdx: i, bIdx })
     } else {
       removedA.push(i)
     }
@@ -168,9 +176,10 @@ function diffArrayUnordered(
   const addedB = b.map((_, i) => i).filter((i) => !matchedBIndices.has(i))
   const children: DiffNode[] = []
 
-  // Emit unchanged matches
-  for (const { aIdx } of unchangedA) {
-    children.push(unchangedNode(aIdx, a[aIdx], `${path}[${aIdx}]`))
+  // Recursively diff matched pairs with the original opts so that
+  // key-order differences inside objects are still surfaced.
+  for (const { aIdx, bIdx } of matchedPairs) {
+    children.push(...diffAtKey(aIdx, a[aIdx], b[bIdx], `${path}[${aIdx}]`, opts))
   }
   // Emit removed
   for (const i of removedA) {
