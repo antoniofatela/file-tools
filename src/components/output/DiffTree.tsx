@@ -162,7 +162,7 @@ export function DiffTreeNode({ node, depth, hideUnchanged }: NodeProps) {
           </span>
         ) : isContainer ? (
           <span className="text-muted-foreground">
-            {Array.isArray(node.children?.length) ? '[ ]' : '{ }'}
+            {typeof node.children?.[0]?.key === 'number' ? '[ ]' : '{ }'}
             <StatsBadge node={node} />
           </span>
         ) : (
