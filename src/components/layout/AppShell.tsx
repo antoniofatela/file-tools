@@ -11,7 +11,7 @@ import { ValidatePanel } from '@/components/output/ValidatePanel'
 import { TreePanel } from '@/components/tree/TreePanel'
 import { JsonPathPanel } from '@/components/jsonpath/JsonPathPanel'
 import { JqPanel } from '@/components/jq/JqPanel'
-import { SchemaPanel } from '@/components/output/SchemaPanel'
+import { ConverterPanel } from '@/components/output/ConverterPanel'
 import { DiffPanel } from '@/components/output/DiffPanel'
 import { useAppState } from '@/hooks/useAppState'
 import { Toaster } from '@/components/ui/toaster'
@@ -122,8 +122,8 @@ export function AppShell() {
         />
       ) : activeTab === 'jsonquery' ? (
         <JqPanel parseResult={parseResult} isDark={isDark} />
-      ) : activeTab === 'schema' ? (
-        <SchemaPanel parseResult={parseResult} isDark={isDark} />
+      ) : activeTab === 'convert' ? (
+        <ConverterPanel parseResult={parseResult} isDark={isDark} />
       ) : activeTab === 'diff' ? (
         <DiffPanel docA={parseResult} isDark={isDark} />
       ) : null}
