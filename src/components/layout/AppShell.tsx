@@ -120,7 +120,7 @@ export function AppShell() {
           selectedPath={selectedNodePath}
           onSelectPath={setSelectedNodePath}
         />
-      ) : activeTab === 'jq' ? (
+      ) : activeTab === 'jsonquery' ? (
         <JqPanel parseResult={parseResult} isDark={isDark} />
       ) : activeTab === 'schema' ? (
         <SchemaPanel parseResult={parseResult} isDark={isDark} />
