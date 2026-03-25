@@ -10,6 +10,7 @@ import { MinifyPanel } from '@/components/output/MinifyPanel'
 import { ValidatePanel } from '@/components/output/ValidatePanel'
 import { TreePanel } from '@/components/tree/TreePanel'
 import { JsonPathPanel } from '@/components/jsonpath/JsonPathPanel'
+import { JqPanel } from '@/components/jq/JqPanel'
 import { SchemaPanel } from '@/components/output/SchemaPanel'
 import { DiffPanel } from '@/components/output/DiffPanel'
 import { useAppState } from '@/hooks/useAppState'
@@ -119,6 +120,8 @@ export function AppShell() {
           selectedPath={selectedNodePath}
           onSelectPath={setSelectedNodePath}
         />
+      ) : activeTab === 'jq' ? (
+        <JqPanel parseResult={parseResult} isDark={isDark} />
       ) : activeTab === 'schema' ? (
         <SchemaPanel parseResult={parseResult} isDark={isDark} />
       ) : activeTab === 'diff' ? (
