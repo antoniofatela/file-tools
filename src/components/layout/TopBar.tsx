@@ -9,6 +9,7 @@ const TABS: { id: ToolMode; label: string }[] = [
   { id: 'minify', label: 'Minify' },
   { id: 'tree', label: 'Tree' },
   { id: 'jsonpath', label: 'JSONPath' },
+  { id: 'jq', label: 'jq' },
   { id: 'schema', label: 'Schema' },
   { id: 'diff', label: 'Diff' },
 ]

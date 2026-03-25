@@ -10,6 +10,8 @@ interface Props {
   selectedPath?: string | null
 }
 
+const MAX_PREVIEW_LINES = 30
+
 function ValuePreview({ value }: { value: unknown }) {
   if (value === null) return <span className="text-slate-400 italic">null</span>
   if (typeof value === 'boolean')
@@ -19,14 +21,17 @@ function ValuePreview({ value }: { value: unknown }) {
     const display = value.length > 60 ? value.slice(0, 60) + '…' : value
     return <span className="text-green-600 dark:text-green-400">&quot;{display}&quot;</span>
   }
-  if (Array.isArray(value)) return <span className="text-muted-foreground">[{value.length} items]</span>
-  if (typeof value === 'object')
+  if (typeof value === 'object') {
+    const json = JSON.stringify(value, null, 2)
+    const lines = json.split('\n')
+    const truncated = lines.length > MAX_PREVIEW_LINES
+    const display = truncated ? lines.slice(0, MAX_PREVIEW_LINES).join('\n') + '\n…' : json
     return (
-      <span className="text-muted-foreground">
-        {'{'}
-        {Object.keys(value as object).length} keys{'}'}
-      </span>
+      <pre className="mt-1 overflow-auto rounded bg-muted px-2 py-1.5 text-xs leading-relaxed text-foreground">
+        {display}
+      </pre>
     )
+  }
   return <span>{String(value)}</span>
 }
 
