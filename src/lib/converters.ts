@@ -1,5 +1,5 @@
 import { dump as yamlDump } from 'js-yaml'
-import { stringify as tomlStringify } from '@iarna/toml'
+import { stringify as tomlStringify } from 'smol-toml'
 import { generateSchema } from './schema-generator'
 
 // ─── XML ────────────────────────────────────────────────────────────────────
@@ -55,10 +55,9 @@ export function toYaml(parsed: unknown): string {
 // ─── TOML ───────────────────────────────────────────────────────────────────
 
 export function toToml(parsed: unknown): string {
-  // TOML only supports objects at root level, and doesn't support null values.
   if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed))
     throw new Error('TOML requires a root-level object (not an array or primitive).')
-  return tomlStringify(parsed as Parameters<typeof tomlStringify>[0])
+  return tomlStringify(parsed as Record<string, unknown>)
 }
 
 // ─── Schema ──────────────────────────────────────────────────────────────────
