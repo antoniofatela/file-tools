@@ -5,15 +5,6 @@ import { cn } from '@/lib/utils'
 import { jsonquery } from '@jsonquerylang/jsonquery'
 import type { ParseResult } from '@/types/json'
 
-const EXAMPLES = [
-  { label: 'Identity', query: '.' },
-  { label: 'Keys', query: 'keys' },
-  { label: 'Filter', query: '.users | filter(.active == true)' },
-  { label: 'Sort', query: '.users | sort(.name)' },
-  { label: 'Pick', query: '.users | pick(.name, .active)' },
-  { label: 'Map', query: '.users | map(.name)' },
-]
-
 interface Props {
   parseResult: ParseResult
   isDark: boolean
@@ -72,19 +63,6 @@ export function JqPanel({ parseResult, isDark }: Props) {
           />
         </div>
 
-        {/* Example queries */}
-        <div className="flex flex-wrap gap-1.5">
-          <span className="text-xs text-muted-foreground">Examples:</span>
-          {EXAMPLES.map((ex) => (
-            <button
-              key={ex.query}
-              onClick={() => setQuery(ex.query)}
-              className="rounded border bg-muted px-2 py-0.5 font-mono text-xs text-foreground transition-colors hover:bg-accent"
-            >
-              {ex.label}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Output */}
