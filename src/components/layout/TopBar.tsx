@@ -57,25 +57,36 @@ export function TopBar({
             </div>
           )}
           {TABS.map((tab) => (
-            <Tooltip key={tab.id}>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => onTabChange(tab.id)}
-                  disabled={hasErrors}
+            <div key={tab.id} className="flex items-center">
+              <button
+                onClick={() => onTabChange(tab.id)}
+                disabled={hasErrors}
+                className={cn(
+                  'rounded-md px-3 py-1.5 text-sm font-medium transition-all',
+                  hasErrors
+                    ? 'text-muted-foreground/40 cursor-not-allowed'
+                    : activeTab === tab.id
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {tab.label}
+              </button>
+              <Tooltip>
+                <TooltipTrigger
+                  onClick={(e) => e.stopPropagation()}
                   className={cn(
-                    'rounded-md px-3 py-1.5 text-sm font-medium transition-all',
+                    '-ml-1 mr-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-semibold transition-colors',
                     hasErrors
-                      ? 'text-muted-foreground/40 cursor-not-allowed'
-                      : activeTab === tab.id
-                        ? 'bg-background text-foreground shadow-sm'
-                        : 'text-muted-foreground hover:text-foreground'
+                      ? 'text-muted-foreground/30'
+                      : 'text-muted-foreground/50 hover:bg-muted-foreground/15 hover:text-muted-foreground'
                   )}
                 >
-                  {tab.label}
-                </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">{tab.description}</TooltipContent>
-            </Tooltip>
+                  ?
+                </TooltipTrigger>
+                <TooltipContent side="bottom">{tab.description}</TooltipContent>
+              </Tooltip>
+            </div>
           ))}
         </nav>
       </TooltipProvider>
