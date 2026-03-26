@@ -1,6 +1,7 @@
 import { Search } from 'lucide-react'
 import { ResultsList } from './ResultsList'
 import { WhyNoResults } from './WhyNoResults'
+import { PanelInfo } from '@/components/ui/PanelInfo'
 import type { PathResult } from '@/types/json'
 import type { DiagnosticResult } from '@/lib/jsonpath'
 
@@ -39,7 +40,12 @@ export function JsonPathPanel({
   }
 
   return (
-    <div className="flex h-full flex-col gap-4 p-4">
+    <div className="flex h-full flex-col">
+      <PanelInfo
+        title="JSONPath"
+        description="Query specific values from your JSON using JSONPath expressions. Use $ as the root, .key for fields, [*] for all array items, .. for recursive descent, and [?(@.field)] for filters. Example: $.store.book[*].title"
+      />
+      <div className="flex flex-col gap-4 p-4 min-h-0 flex-1">
       {/* Query input */}
       <div className="space-y-2">
         <label className="text-xs font-medium text-muted-foreground">JSONPath Query</label>
@@ -83,6 +89,7 @@ export function JsonPathPanel({
             Type a JSONPath expression above to query your JSON.
           </div>
         )}
+      </div>
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react'
 import { Copy, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { PanelInfo } from '@/components/ui/PanelInfo'
 import { PrettifyControls } from '@/components/toolbar/PrettifyControls'
 import { useClipboard } from '@/hooks/useClipboard'
 import type { ParseResult } from '@/types/json'
@@ -28,6 +29,10 @@ export function PrettifyPanel({ parseResult, indentWidth, onIndentChange, isDark
 
   return (
     <div className="flex h-full flex-col">
+      <PanelInfo
+        title="Prettify"
+        description="Format your JSON with consistent indentation. Use the controls below to choose between 2 spaces, 4 spaces, or tabs."
+      />
       <div className="flex items-center justify-between border-b px-3 py-2">
         <PrettifyControls indentWidth={indentWidth} onChange={onIndentChange} />
         <Button

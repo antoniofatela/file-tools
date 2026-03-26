@@ -1,18 +1,17 @@
 import { Braces, Moon, Sun, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { ShareButton } from '@/components/toolbar/ShareButton'
 import { cn } from '@/lib/utils'
 import type { ToolMode, IndentWidth } from '@/types/state'
 
-const TABS: { id: ToolMode; label: string; description: string }[] = [
-  { id: 'prettify',   label: 'Prettify',    description: 'Format JSON with configurable indentation' },
-  { id: 'minify',     label: 'Minify',      description: 'Strip all whitespace to produce the smallest JSON' },
-  { id: 'tree',       label: 'Tree',        description: 'Browse JSON as an interactive, collapsible tree' },
-  { id: 'jsonpath',   label: 'JSONPath',    description: 'Query values using JSONPath expressions (e.g. $.store.book[*].title)' },
-  { id: 'jsonquery',  label: 'JSON Query',  description: 'Transform JSON with the jsonquery language — filter, sort, pick, map and more' },
-  { id: 'convert',    label: 'Convert',     description: 'Export JSON as YAML, XML, TOML, JSON Schema, or JSDoc' },
-  { id: 'diff',       label: 'Diff',        description: 'Compare two JSON documents and highlight every difference' },
+const TABS: { id: ToolMode; label: string }[] = [
+  { id: 'prettify',  label: 'Prettify'   },
+  { id: 'minify',    label: 'Minify'     },
+  { id: 'tree',      label: 'Tree'       },
+  { id: 'jsonpath',  label: 'JSONPath'   },
+  { id: 'jsonquery', label: 'JSON Query' },
+  { id: 'convert',   label: 'Convert'   },
+  { id: 'diff',      label: 'Diff'      },
 ]
 
 interface Props {
@@ -47,49 +46,32 @@ export function TopBar({
       </div>
 
       {/* Tab navigation */}
-      <TooltipProvider delayDuration={400}>
-        <nav className="flex items-center rounded-lg border bg-muted p-1">
-          {/* Error indicator — shown instead of normal tabs when JSON is invalid */}
-          {hasErrors && (
-            <div className="flex items-center gap-1.5 rounded-md bg-red-100 px-3 py-1.5 text-sm font-medium text-red-700 dark:bg-red-950/60 dark:text-red-400">
-              <AlertCircle className="h-3.5 w-3.5" />
-              Errors
-            </div>
-          )}
-          {TABS.map((tab) => (
-            <div key={tab.id} className="flex items-center">
-              <button
-                onClick={() => onTabChange(tab.id)}
-                disabled={hasErrors}
-                className={cn(
-                  'rounded-md px-3 py-1.5 text-sm font-medium transition-all',
-                  hasErrors
-                    ? 'text-muted-foreground/40 cursor-not-allowed'
-                    : activeTab === tab.id
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                {tab.label}
-              </button>
-              <Tooltip>
-                <TooltipTrigger
-                  onClick={(e) => e.stopPropagation()}
-                  className={cn(
-                    '-ml-1 mr-1 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-semibold transition-colors',
-                    hasErrors
-                      ? 'text-muted-foreground/30'
-                      : 'text-muted-foreground/50 hover:bg-muted-foreground/15 hover:text-muted-foreground'
-                  )}
-                >
-                  ?
-                </TooltipTrigger>
-                <TooltipContent side="bottom">{tab.description}</TooltipContent>
-              </Tooltip>
-            </div>
-          ))}
-        </nav>
-      </TooltipProvider>
+      <nav className="flex items-center rounded-lg border bg-muted p-1">
+        {/* Error indicator — shown instead of normal tabs when JSON is invalid */}
+        {hasErrors && (
+          <div className="flex items-center gap-1.5 rounded-md bg-red-100 px-3 py-1.5 text-sm font-medium text-red-700 dark:bg-red-950/60 dark:text-red-400">
+            <AlertCircle className="h-3.5 w-3.5" />
+            Errors
+          </div>
+        )}
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => onTabChange(tab.id)}
+            disabled={hasErrors}
+            className={cn(
+              'rounded-md px-3 py-1.5 text-sm font-medium transition-all',
+              hasErrors
+                ? 'text-muted-foreground/40 cursor-not-allowed'
+                : activeTab === tab.id
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </nav>
 
       {/* Actions */}
       <div className="flex items-center gap-2">

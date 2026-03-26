@@ -4,6 +4,7 @@ import { parseJson } from '@/lib/json-parser'
 import { diffJson, summarize, type DiffOptions, type DiffNode } from '@/lib/json-diff'
 import { DiffTreeNode } from './DiffTree'
 import { Badge } from '@/components/ui/badge'
+import { PanelInfo } from '@/components/ui/PanelInfo'
 import { cn } from '@/lib/utils'
 import type { ParseResult, ValidationError } from '@/types/json'
 
@@ -128,6 +129,10 @@ export function DiffPanel({ docA, isDark }: Props) {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
+      <PanelInfo
+        title="Diff"
+        description="Compare two JSON documents and see exactly what changed. Paste the second document into the right-hand editor. Green = added, red = removed, blue = reordered. Toggle the options below to ignore array order or object key order."
+      />
       {/* Options bar */}
       <div className="shrink-0 border-b bg-muted/30 px-4 py-3">
         <div className="flex flex-wrap gap-6">

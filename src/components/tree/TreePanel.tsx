@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { buildTree } from '@/lib/json-tree'
 import { TreeNode } from './TreeNode'
+import { PanelInfo } from '@/components/ui/PanelInfo'
 import type { ParseResult } from '@/types/json'
 
 interface Props {
@@ -41,6 +42,10 @@ export function TreePanel({
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
+      <PanelInfo
+        title="Tree"
+        description="Explore your JSON structure visually. Click any object or array node to expand or collapse it. Click a path label to select it and copy it to the clipboard."
+      />
       {truncated && (
         <div className="border-b bg-yellow-50 px-4 py-2 text-xs text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-400">
           Tree truncated — the document is very large. Showing the first 5,000 nodes.

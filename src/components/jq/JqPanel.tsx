@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { AlertCircle, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { jsonquery } from '@jsonquerylang/jsonquery'
+import { PanelInfo } from '@/components/ui/PanelInfo'
 import type { ParseResult } from '@/types/json'
 
 interface Props {
@@ -41,10 +42,14 @@ export function JqPanel({ parseResult, isDark }: Props) {
   }
 
   return (
-    <div className="flex h-full flex-col gap-4 p-4">
+    <div className="flex h-full flex-col">
+      <PanelInfo
+        title="JSON Query"
+        description="Transform your JSON using the jsonquery language (jsonquerylang.org). Chain operations with the pipe operator |. Examples: .users | filter(.active == true) | sort(.name) | pick(.name, .age)"
+      />
+      <div className="flex flex-col gap-4 p-4 min-h-0 flex-1">
       {/* Header */}
       <div className="flex items-center gap-2">
-        <span className="text-sm font-semibold">JSON Query</span>
         <Badge variant="secondary">jsonquerylang.org</Badge>
       </div>
 
@@ -93,6 +98,7 @@ export function JqPanel({ parseResult, isDark }: Props) {
             Type a JSON Query expression above to transform your JSON.
           </div>
         )}
+      </div>
       </div>
     </div>
   )

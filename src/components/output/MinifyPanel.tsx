@@ -1,6 +1,7 @@
 import { Copy, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { PanelInfo } from '@/components/ui/PanelInfo'
 import { useClipboard } from '@/hooks/useClipboard'
 import type { ParseResult } from '@/types/json'
 
@@ -30,7 +31,12 @@ export function MinifyPanel({ parseResult }: Props) {
     originalSize > 0 ? Math.round(((originalSize - minifiedSize) / originalSize) * 100) : 0
 
   return (
-    <div className="flex h-full flex-col gap-4 p-4">
+    <div className="flex h-full flex-col">
+      <PanelInfo
+        title="Minify"
+        description="Remove all whitespace to produce the most compact JSON string. Useful for reducing payload size when sending JSON over a network."
+      />
+      <div className="flex flex-col gap-4 p-4 min-h-0 flex-1">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Badge variant="secondary">{formatBytes(minifiedSize)}</Badge>
@@ -53,6 +59,7 @@ export function MinifyPanel({ parseResult }: Props) {
           {parseResult.minified}
         </pre>
       </div>
+    </div>
     </div>
   )
 }

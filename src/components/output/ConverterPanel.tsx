@@ -1,6 +1,7 @@
 import { useMemo, useState, Suspense, lazy } from 'react'
 import { Copy, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { PanelInfo } from '@/components/ui/PanelInfo'
 import { useClipboard } from '@/hooks/useClipboard'
 import { toJsDoc, toSchema, toToml, toXml, toYaml } from '@/lib/converters'
 import type { ParseResult } from '@/types/json'
@@ -56,6 +57,10 @@ export function ConverterPanel({ parseResult, isDark }: Props) {
 
   return (
     <div className="flex h-full flex-col">
+      <PanelInfo
+        title="Convert"
+        description="Export your JSON in another format. Choose from the dropdown: YAML (human-friendly), XML (with a root element), TOML (config-file format, requires a root object), JSON Schema Draft-07 (inferred from your data), or JSDoc @typedef blocks."
+      />
       {/* Header */}
       <div className="flex shrink-0 items-center justify-between border-b px-3 py-2">
         <div className="flex items-center gap-2">
